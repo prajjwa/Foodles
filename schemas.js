@@ -1,5 +1,6 @@
 const BaseJoi = require('joi');
-const sanitizeHtml = require('sanitize-html');
+const Xss = require('xss');
+
 
 const extension = (joi) => ({
     type: 'string',
@@ -10,10 +11,12 @@ const extension = (joi) => ({
     rules: {
         escapeHTML: {
             validate(value, helpers){
-                const clean = sanitizeHtml(value, {
-                    allowedTags: [],
-                    allowedAttributes: {},
-                });
+                const clean = Xss(value, {
+                    whiteList: {}, // empty, means filter out all tags
+                    stripIgnoreTag: true, // filter out all HTML not in the whitelist
+                    stripIgnoreTagBody: ["script"], // the script tag is a special case, we need
+                    // to filter out its content
+                  });
                 if(clean !== value) return helpers.error('string.escapeHTML', {value})
                 return clean;
             }
